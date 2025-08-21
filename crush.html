@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Unlock the Surprise 💌</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg1:#ffd1dc;
+    --bg2:#d9e7ff;
+    --accent:#ff5da2;
+    --accent-2:#8b5cf6;
+    --glass-bg:rgba(255,255,255,0.25);
+    --glass-br:rgba(255,255,255,0.45);
+    --text:#2b2b33;
+    --muted:#6b6b76;
+    --success:#22c55e;
+    --danger:#ef4444;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 800px at 0% 0%, rgba(255,255,255,0.6), transparent 60%),
+      radial-gradient(1200px 800px at 100% 100%, rgba(255,255,255,0.6), transparent 60%),
+      linear-gradient(135deg, var(--bg1), var(--bg2));
+    overflow-x:hidden;
+  }
+
+  /* Layout */
+  .wrap{
+    min-height:100%;
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+  }
+  header, footer{
+    padding:12px 16px;
+    text-align:center;
+    color:var(--muted);
+    font-size:0.9rem;
+  }
+  footer{opacity:0.9}
+
+  /* Glass Card */
+  .card{
+    width:min(680px, 92vw);
+    margin-inline:auto;
+    background:var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border:1px solid var(--glass-br);
+    border-radius:22px;
+    padding:20px;
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.08),
+      inset 0 1px 1px rgba(255,255,255,0.5);
+  }
+
+  /* Stages */
+  .stage{
+    display:none;
+    opacity:0;
+    transform:translateY(10px) scale(0.98);
+    transition:opacity .45s ease, transform .45s ease;
+  }
+  .stage.active{
+    display:block;
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+  h1,h2{margin:8px 0}
+  h1{
+    font-size:clamp(1.35rem, 1.1rem + 2.2vw, 2.2rem);
+    font-weight:700;
+    letter-spacing:.3px;
+  }
+  h2{
+    font-size:clamp(1rem, .85rem + 1vw, 1.35rem);
+    font-weight:600;
+    color:#333;
+  }
+  p.lead{color:var(--muted); margin-top:6px}
+
+  /* Buttons */
+  .btn{
+    -webkit-tap-highlight-color: transparent;
+    appearance:none;border:0;cursor:pointer;
+    border-radius:14px;padding:12px 18px;
+    font-weight:700;
+    transition: transform .12s ease, box-shadow .25s ease, background .2s ease, opacity .2s;
+    outline:2px solid transparent; outline-offset:3px;
+    user-select:none;
+  }
+  .btn:active{transform:translateY(1px) scale(0.99)}
+  .btn:focus-visible{outline-color:var(--accent)}
+  .btn.primary{
+    background:linear-gradient(135deg, var(--accent), #ff84c7);
+    color:white;
+    box-shadow: 0 8px 18px rgba(255,93,162,.35);
+  }
+  .btn.secondary{
+    background:rgba(255,255,255,0.7);
+    color:#333;
+    border:1px solid rgba(0,0,0,0.05);
+  }
+  .btn.ghost{
+    background:transparent;border:1px dashed rgba(0,0,0,0.2);color:#444;
+  }
+
+  /* Stage A — Memory Game */
+  .meta{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin:6px 0 14px;
+    font-size:.95rem;
+  }
+  .badge{
+    background:rgba(255,255,255,.65);
+    border:1px solid rgba(0,0,0,.06);
+    border-radius:999px; padding:6px 10px; color:#333;
+  }
+  .progress{
+    height:10px; width:100%; background:rgba(255,255,255,0.6); border-radius:999px; overflow:hidden; border:1px solid rgba(0,0,0,0.05);
+  }
+  .progress > span{
+    display:block; height:100%;
+    background:linear-gradient(90deg, var(--accent-2), var(--accent));
+    width:0%;
+    transition:width .4s ease;
+  }
+  .grid{
+    margin:14px 0 10px;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+  }
+  .cardy{
+    position:relative;
+    aspect-ratio:1/1.1;
+    perspective:800px;
+  }
+  .tile{
+    position:relative; width:100%; height:100%;
+    border-radius:18px; border:1px solid rgba(0,0,0,0.06);
+    transform-style:preserve-3d;
+    transition:transform .5s ease, box-shadow .3s ease;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.06);
+    background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.75));
+    cursor:pointer;
+  }
+  .tile:hover{box-shadow: 0 12px 26px rgba(0,0,0,0.08)}
+  .tile.flipped{transform:rotateY(180deg)}
+  .face{
+    position:absolute; inset:0; display:grid; place-items:center; border-radius:18px; backface-visibility:hidden;
+    font-size: clamp(1.6rem, 1.2rem + 4vw, 3rem);
+  }
+  .front{ background:rgba(255,255,255,.85) }
+  .back{
+    transform:rotateY(180deg);
+    background:radial-gradient(120% 120% at 20% 10%, rgba(255,255,255,0.95), rgba(255,255,255,0.7));
+  }
+  .controls{
+    display:flex; gap:10px; justify-content:center; margin-top:10px; flex-wrap:wrap;
+  }
+  .best{
+    font-size:.9rem; color:var(--muted); margin-top:8px; text-align:center;
+  }
+
+  /* Stage B — Confession + floating hearts background */
+  .stageB{
+    position:relative; overflow:hidden;
+  }
+  .hearts-bg{
+    position:absolute; inset:0; overflow:hidden; z-index:0; pointer-events:none;
+  }
+  .heart-dot{
+    position:absolute;
+    width:14px; height:14px;
+    transform:translate(-50%, -50%) scale(0.9);
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.15));
+    opacity:.9;
+    animation: floatUp linear infinite;
+  }
+  .heart-shape{
+    position:relative; width:100%; height:100%;
+    background: radial-gradient(circle at 30% 30%, #ff9ad0, #ff5da2);
+    transform: rotate(45deg);
+    border-radius: 4px;
+  }
+  .heart-shape::before, .heart-shape::after{
+    content:""; position:absolute; width:100%; height:100%; background:inherit; border-radius:50%;
+  }
+  .heart-shape::before{ left:-50%; }
+  .heart-shape::after{ top:-50%; }
+  @keyframes floatUp{
+    from{ transform:translate(var(--x,0), var(--yStart, 110%)) rotate(0deg) scale(0.9); opacity:0 }
+    10%{opacity:0.85}
+    to{ transform:translate(var(--x,0), -10%) rotate(360deg) scale(1.05); opacity:0 }
+  }
+
+  .confess{
+    position:relative; z-index:1; text-align:center; padding:10px 6px 6px;
+  }
+  .cta-row{
+    display:flex; gap:12px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:14px;
+  }
+  @media(min-width:740px){
+    .cta-row{flex-wrap:nowrap}
+  }
+
+  /* Stage C — Modals & Toast */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,0.35);
+    display:none; align-items:center; justify-content:center; padding:16px;
+    z-index:50;
+  }
+  .modal-backdrop.show{display:flex; animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{
+    width:min(520px, 92vw);
+    background:var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border:1px solid var(--glass-br);
+    border-radius:20px;
+    padding:18px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    transform:scale(.96);
+    animation:pop .25s ease forwards;
+  }
+  @keyframes pop{to{transform:scale(1)}}
+  .modal h3{margin:6px 0 4px; font-size:1.35rem}
+  .modal p{margin:0 0 12px; color:var(--muted)}
+  .modal .actions{display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap}
+
+  .toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px);
+    background:rgba(0,0,0,0.75); color:white; padding:10px 14px; border-radius:999px;
+    font-size:.95rem; z-index:60; opacity:0; transition:opacity .25s ease, transform .25s ease;
+    pointer-events:none; max-width:86vw; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  /* Confetti hearts */
+  .confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:80}
+  .confetti .h{
+    position:absolute; width:16px; height:16px;
+    transform:translate(-50%, -50%);
+    animation:drop 2s ease forwards;
+  }
+  .confetti .h > i{
+    display:block; width:100%; height:100%; transform:rotate(45deg);
+    background: radial-gradient(circle at 30% 30%, #fff, #ffd1dc);
+    border-radius:4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.25);
+  }
+  .confetti .h > i::before, .confetti .h > i::after{
+    content:""; position:absolute; width:100%; height:100%; background:inherit; border-radius:50%;
+  }
+  .confetti .h > i::before{ left:-50%}
+  .confetti .h > i::after{ top:-50%}
+  @keyframes drop{
+    0%{opacity:0; transform:translate(var(--x,0), -10vh) rotate(0deg) scale(.9)}
+    10%{opacity:1}
+    100%{opacity:0; transform:translate(var(--xend,0), 105vh) rotate(540deg) scale(1.1)}
+  }
+
+  /* Sound toggle */
+  .sound{
+    position:fixed; top:12px; right:12px; z-index:70;
+    background:rgba(255,255,255,0.8); border:1px solid rgba(0,0,0,0.06);
+    border-radius:999px; padding:8px 12px; font-weight:600; font-size:.95rem;
+    display:flex; align-items:center; gap:8px;
+    box-shadow:0 6px 16px rgba(0,0,0,0.08);
+  }
+  .sound input{accent-color:var(--accent)}
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+
+  /* Tiny float animation for headers */
+  .floaty{animation:rise 5s ease-in-out infinite}
+  @keyframes rise{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-6px)}
+  }
+
+  /* Accessibility focus */
+  :focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header aria-label="Site Header">
+    <span>💞 A playful little journey…</span>
+  </header>
+
+  <!-- Sound Toggle -->
+  <button class="sound btn secondary" id="soundToggle" aria-pressed="false" aria-label="Toggle sound (muted by default)">
+    🔇 Sound Off
+  </button>
+
+  <main style="display:grid; place-items:center; padding:14px;">
+    <!-- Stage A: Memory Game Gate -->
+    <section id="stageA" class="stage active" aria-label="Unlock the Surprise">
+      <div class="card" role="region" aria-labelledby="titleA">
+        <h1 id="titleA" class="floaty">Unlock the Surprise 💌</h1>
+        <p class="lead">Flip the cards and match the pairs to continue. Timer, moves, and progress below. Good luck! ✨</p>
+
+        <div class="meta" aria-live="polite">
+          <span class="badge">⏱️ Time: <strong id="time">00:00</strong></span>
+          <span class="badge">🧠 Moves: <strong id="moves">0</strong></span>
+          <span class="badge">🏅 Best: <strong id="bestScore">—</strong></span>
+        </div>
+
+        <div class="progress" aria-label="Progress">
+          <span id="progressBar" style="width:0%"></span>
+        </div>
+
+        <div class="grid" id="grid" role="grid" aria-label="Memory cards"></div>
+
+        <div class="controls">
+          <button class="btn secondary" id="restartBtn" aria-label="Restart game">↻ Restart</button>
+          <button class="btn ghost" id="hintBtn" aria-label="Briefly reveal cards">👀 Peek (1s)</button>
+        </div>
+
+        <p id="gateMsg" class="best" aria-live="polite"></p>
+        <div style="text-align:center; margin-top:8px;">
+          <button id="continueBtn" class="btn primary" style="display:none; font-size:1.05rem;">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stage B: Confession -->
+    <section id="stageB" class="stage stageB" aria-label="Confession Screen">
+      <div class="card confess" role="region" aria-labelledby="titleB">
+        <div class="hearts-bg" aria-hidden="true" id="heartsBg"></div>
+
+        <h1 id="titleB" class="floaty"> I love you 💗</h1>
+        <p class="lead">Now a tiny question…</p>
+        <p class="best" aria-live="polite">Do you love me too?</p>
+
+        <div class="cta-row" role="group" aria-label="Your answer">
+          <button id="yesBtn" class="btn primary" style="min-width:140px;">Yes 💖</button>
+          <button id="noBtn" class="btn secondary" style="min-width:140px; position:relative;">No 🙈</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hidden stage C container is effectively modals / success -->
+    <section id="stageC" class="stage" aria-label="Responses">
+      <div class="card" style="text-align:center;">
+        <h2>Thank you dear, I knew you love me too 😘💕</h2>
+        <p class="lead">Guess what? You just unlocked level ∞ of our love game 🎮💕</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer aria-label="Footer">© Made by Nahid with 💖 just for you.</footer>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- Modal -->
+<div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal" role="document">
+    <h3 id="modalTitle">Title</h3>
+    <p id="modalText">Text</p>
+    <div class="actions">
+      <button id="modalPrimary" class="btn primary">Okay</button>
+      <button id="modalSecondary" class="btn secondary">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confetti container -->
+<div id="confetti" class="confetti" aria-hidden="true"></div>
+
+<script>
+/* ===========================
+   Global State & Utilities
+   =========================== */
+const LS_KEYS = {
+  BEST: 'bestMemoryGameScore',
+  NO_ATTEMPTS: 'noAttempts',
+  NO_USED_100: 'noAttemptUsed100',
+  SOUND_ON: 'proposal_sound_on'
+};
+
+let SOUND_ON = false; // default muted
+const soundBtn = document.getElementById('soundToggle');
+
+function setSound(on){
+  SOUND_ON = !!on;
+  localStorage.setItem(LS_KEYS.SOUND_ON, SOUND_ON ? '1' : '0');
+  soundBtn.setAttribute('aria-pressed', SOUND_ON ? 'true' : 'false');
+  soundBtn.textContent = SOUND_ON ? '🔊 Sound On' : '🔇 Sound Off';
+}
+(function initSound(){
+  const saved = localStorage.getItem(LS_KEYS.SOUND_ON);
+  setSound(saved === '1');
+})();
+
+// Simple chime using Web Audio API (very light)
+function playChime(){
+  if(!SOUND_ON) return;
+  try{
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    const now = ctx.currentTime;
+    // A sweet two-note pluck
+    o.frequency.setValueAtTime(660, now);
+    o.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+    o.frequency.exponentialRampToValueAtTime(523.25, now + 0.7);
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.2, now + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+    o.connect(g).connect(ctx.destination);
+    o.start(now);
+    o.stop(now + 1.7);
+  }catch(e){/* ignore */}
+}
+soundBtn.addEventListener('click', ()=> setSound(!SOUND_ON));
+
+/* ===========================
+   Stage Navigation
+   =========================== */
+const stages = {
+  A: document.getElementById('stageA'),
+  B: document.getElementById('stageB'),
+  C: document.getElementById('stageC'),
+};
+function goToStage(stageId){
+  for(const key in stages){
+    const el = stages[key];
+    if(key === stageId){ el.classList.add('active'); }
+    else { el.classList.remove('active'); }
+  }
+}
+
+/* ===========================
+   Toast
+   =========================== */
+const toastEl = document.getElementById('toast');
+let toastTimer=null;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 1400);
+}
+
+/* ===========================
+   Modal
+   =========================== */
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalTitle = document.getElementById('modalTitle');
+const modalText = document.getElementById('modalText');
+const modalPrimary = document.getElementById('modalPrimary');
+const modalSecondary = document.getElementById('modalSecondary');
+
+function showModal(type){
+  // types: 'success', 'think'
+  modalBackdrop.setAttribute('aria-hidden', 'false');
+  modalBackdrop.classList.add('show');
+
+  if(type === 'success'){
+    modalTitle.textContent = 'Hahaha! Finally you admitted it 😎💘';
+    modalText.textContent = 'Let’s celebrate this moment!';
+    modalPrimary.textContent = 'Yay!';
+    modalSecondary.textContent = 'Close';
+    modalPrimary.onclick = ()=> { modalBackdrop.classList.remove('show'); modalBackdrop.setAttribute('aria-hidden','true'); }
+    modalSecondary.onclick = ()=> { modalBackdrop.classList.remove('show'); modalBackdrop.setAttribute('aria-hidden','true'); }
+  }else if(type === 'think'){
+    modalTitle.textContent = 'Think again… do you love me or not? 🥹';
+    modalText.textContent = 'Deep down, you know it’s YES.';
+    modalPrimary.textContent = 'Okay, YES';
+    modalSecondary.textContent = 'Close';
+    modalPrimary.onclick = ()=> { modalBackdrop.classList.remove('show'); modalBackdrop.setAttribute('aria-hidden','true'); handleYes(); }
+    modalSecondary.onclick = ()=> {
+      modalBackdrop.classList.remove('show'); modalBackdrop.setAttribute('aria-hidden','true');
+      // Resume Stage B with No locked again
+      goToStage('B');
+    };
+  }
+}
+
+/* ===========================
+   Confetti Hearts
+   =========================== */
+function confetti(durationMs = 2000, count = 60){
+  const layer = document.getElementById('confetti');
+  layer.innerHTML = '';
+  const W = window.innerWidth, H = window.innerHeight;
+  for(let i=0;i<count;i++){
+    const d = document.createElement('div');
+    d.className='h';
+    const x = Math.random()*W;
+    const xend = x + (Math.random()*120 - 60);
+    d.style.left = x + 'px';
+    d.style.top = (-Math.random()*H*0.2) + 'px';
+    d.style.setProperty('--x', x+'px');
+    d.style.setProperty('--xend', xend+'px');
+    d.style.animationDelay = (Math.random()*0.4)+'s';
+    d.style.animationDuration = (1.6 + Math.random()*0.8)+'s';
+    d.innerHTML = '<i aria-hidden="true"></i>';
+    layer.appendChild(d);
+  }
+  setTimeout(()=> layer.innerHTML = '', durationMs + 500);
+}
+
+/* ===========================
+   Stage A — Memory Game
+   =========================== */
+const EMOJIS = ['💖','🌟','🍀'];
+let state = {
+  deck: [],
+  first:null,
+  second:null,
+  locked:false,
+  moves:0,
+  matched:0,
+  startTime:0,
+  timerId:null
+};
+const grid = document.getElementById('grid');
+const timeEl = document.getElementById('time');
+const movesEl = document.getElementById('moves');
+const progressBar = document.getElementById('progressBar');
+const bestEl = document.getElementById('bestScore');
+const gateMsg = document.getElementById('gateMsg');
+const continueBtn = document.getElementById('continueBtn');
+
+function formatTime(ms){
+  const s = Math.floor(ms/1000);
+  const mm = String(Math.floor(s/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  return `${mm}:${ss}`;
+}
+function loadBest(){
+  const raw = localStorage.getItem(LS_KEYS.BEST);
+  if(!raw){ bestEl.textContent = '—'; return; }
+  try{
+    const o = JSON.parse(raw);
+    bestEl.textContent = `${o.moves} moves • ${formatTime(o.time)}`;
+  }catch{ bestEl.textContent = '—'; }
+}
+function maybeSaveBest(moves, elapsed){
+  const raw = localStorage.getItem(LS_KEYS.BEST);
+  let save = false;
+  if(!raw) save = true;
+  else{
+    try{
+      const o = JSON.parse(raw);
+      if(moves < o.moves) save = true;
+      else if(moves === o.moves && elapsed < o.time) save = true;
+    }catch{ save = true; }
+  }
+  if(save){
+    localStorage.setItem(LS_KEYS.BEST, JSON.stringify({moves, time: elapsed}));
+    loadBest();
+  }
+}
+function makeDeck(){
+  const arr = [...EMOJIS, ...EMOJIS];
+  // shuffle
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function renderDeck(){
+  grid.innerHTML='';
+  state.deck.forEach((emoji, idx)=>{
+    const cell = document.createElement('div');
+    cell.className='cardy';
+    cell.role='gridcell';
+    const btn = document.createElement('button');
+    btn.className='tile';
+    btn.setAttribute('data-idx', idx);
+    btn.setAttribute('aria-label','Card');
+    btn.innerHTML = `
+      <div class="face front">❓</div>
+      <div class="face back" aria-hidden="true">${emoji}</div>
+    `;
+    btn.addEventListener('click', ()=> flipCard(idx, btn));
+    btn.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' || e.key===' ') { e.preventDefault(); btn.click(); }
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function updateHUD(){
+  movesEl.textContent = state.moves;
+  const pct = (state.matched / EMOJIS.length)*100;
+  progressBar.style.width = `${pct}%`;
+}
+
+function startTimer(){
+  state.startTime = Date.now();
+  if(state.timerId) clearInterval(state.timerId);
+  state.timerId = setInterval(()=>{
+    timeEl.textContent = formatTime(Date.now() - state.startTime);
+  }, 250);
+}
+function stopTimer(){
+  if(state.timerId) clearInterval(state.timerId);
+  state.timerId = null;
+}
+
+function initGame(){
+  state.deck = makeDeck();
+  state.first = state.second = null;
+  state.locked = false;
+  state.moves = 0;
+  state.matched = 0;
+  timeEl.textContent = '00:00';
+  movesEl.textContent = '0';
+  gateMsg.textContent = '';
+  continueBtn.style.display='none';
+  updateHUD();
+  renderDeck();
+  startTimer();
+}
+
+function flipCard(idx, el){
+  if(state.locked) return;
+  if(!el) el = document.querySelector(`.tile[data-idx="${idx}"]`);
+  if(!el || el.classList.contains('flipped')) return;
+  el.classList.add('flipped');
+
+  if(state.first === null){
+    state.first = idx;
+  }else if(state.second === null){
+    state.second = idx;
+    state.locked = true;
+    state.moves++;
+    updateHUD();
+    setTimeout(checkMatch, 460);
+  }
+}
+
+function checkMatch(){
+  const a = state.first, b = state.second;
+  const match = state.deck[a] === state.deck[b];
+  if(match){
+    state.matched++;
+    // Disable pointer on matched
+    document.querySelector(`.tile[data-idx="${a}"]`).style.pointerEvents='none';
+    document.querySelector(`.tile[data-idx="${b}"]`).style.pointerEvents='none';
+  }else{
+    document.querySelector(`.tile[data-idx="${a}"]`).classList.remove('flipped');
+    document.querySelector(`.tile[data-idx="${b}"]`).classList.remove('flipped');
+  }
+  state.first = state.second = null;
+  state.locked = false;
+  updateHUD();
+
+  if(state.matched === EMOJIS.length){
+    stopTimer();
+    const elapsed = Date.now() - state.startTime;
+    maybeSaveBest(state.moves, elapsed);
+    gateMsg.textContent = 'Nice! Tap Continue to reveal the message';
+    continueBtn.style.display='inline-block';
+    continueBtn.focus();
+  }
+}
+
+/* Helpers for brief hint */
+document.getElementById('hintBtn').addEventListener('click', ()=>{
+  const tiles = [...document.querySelectorAll('.tile')];
+  tiles.forEach(t=> t.classList.add('flipped'));
+  setTimeout(()=> tiles.forEach(t=> {
+    // keep matched flipped (pointer-events none)
+    if(t.style.pointerEvents!=='none') t.classList.remove('flipped');
+  }), 1000);
+});
+document.getElementById('restartBtn').addEventListener('click', initGame);
+document.getElementById('continueBtn').addEventListener('click', ()=> goToStage('B'));
+
+/* ===========================
+   Stage B — Hearts BG + Buttons
+   =========================== */
+const heartsBg = document.getElementById('heartsBg');
+function spawnBgHearts(){
+  heartsBg.innerHTML='';
+  const count = 16;
+  for(let i=0;i<count;i++){
+    const d = document.createElement('div');
+    d.className='heart-dot';
+    const left = Math.random()*100;
+    d.style.left = left + '%';
+    d.style.setProperty('--x', left + 'vw');
+    d.style.setProperty('--yStart', (100 + Math.random()*20) + '%');
+    d.style.animationDuration = (8 + Math.random()*6) + 's';
+    d.style.animationDelay = (Math.random()*4)+'s';
+    d.innerHTML = '<div class="heart-shape" aria-hidden="true"></div>';
+    heartsBg.appendChild(d);
+  }
+}
+
+/* ===========================
+   Stage C — Responses & Naughty No
+   =========================== */
+const yesBtn = document.getElementById('yesBtn');
+const noBtn = document.getElementById('noBtn');
+
+let noAttempts = parseInt(localStorage.getItem(LS_KEYS.NO_ATTEMPTS) || '0', 10);
+let used100 = localStorage.getItem(LS_KEYS.NO_USED_100) === '1';
+
+function saveAttempts(){
+  localStorage.setItem(LS_KEYS.NO_ATTEMPTS, String(noAttempts));
+}
+function saveUsed100(flag){
+  used100 = !!flag;
+  localStorage.setItem(LS_KEYS.NO_USED_100, used100 ? '1' : '0');
+}
+function attemptMessage(n){
+  if(n>=51 && n<=99) return 'Almost there… just say Yes! 🥺';
+  if(n>=11 && n<=50) return 'Come on… you know the answer 💞';
+  if(n>=4 && n<=10) return 'Are you suuure? 😏';
+  return 'Nope, can’t catch me 😜';
+}
+
+function handleYes(){
+  goToStage('C'); // tiny wink
+  showModal('success');
+  confetti(2000, 80);
+  playChime();
+}
+
+function teleportNo(){
+  // Move within its container (cta-row)
+  const parent = noBtn.parentElement.getBoundingClientRect();
+  const btnRect = noBtn.getBoundingClientRect();
+  const maxX = parent.width - btnRect.width;
+  const maxY = parent.height - btnRect.height;
+  const x = Math.max(0, Math.min(maxX, Math.random()*maxX));
+  const y = Math.max(0, Math.min(maxY, Math.random()*maxY));
+  noBtn.style.position='relative';
+  noBtn.style.transition='transform .2s ease';
+  noBtn.style.transform = `translate(${x - (btnRect.left - parent.left)}px, ${y - (btnRect.top - parent.top)}px)`;
+}
+
+function handleNoHover(){
+  // Increment attempts and escape, unless we’re exactly at 100 and not used yet
+  if(noAttempts === 100 && !used100){
+    // allow click once; don’t move, but still show playful prompt
+    toast('Okay… one honest click 😳');
+    return;
+  }
+  noAttempts++;
+  saveAttempts();
+  toast(attemptMessage(noAttempts));
+  teleportNo();
+}
+
+function handleNoClick(e){
+  // Only allow on exactly 100 and only once
+  if(noAttempts === 100 && !used100){
+    showModal('think');
+    saveUsed100(true); // thereafter locked again
+    return;
+  }
+  // If not allowed, treat as hover attempt and block
+  e.preventDefault();
+  e.stopPropagation();
+  handleNoHover();
+}
+
+yesBtn.addEventListener('click', handleYes);
+// Mouse interactions
+noBtn.addEventListener('mouseenter', handleNoHover);
+noBtn.addEventListener('click', handleNoClick);
+// Keyboard accessibility: when No gains focus or on keydown, make it jump
+noBtn.addEventListener('focus', handleNoHover);
+noBtn.addEventListener('keydown', (e)=>{
+  // intercept activation keys
+  if(['Enter',' '].includes(e.key)){
+    handleNoClick(e);
+  }else{
+    handleNoHover();
+  }
+});
+
+/* Also make the button dodge the cursor as it approaches (fun!) */
+noBtn.addEventListener('mousemove', (e)=>{
+  const rect = noBtn.getBoundingClientRect();
+  const pad = 24;
+  const near = e.offsetX < pad || e.offsetY < pad || e.offsetX > rect.width-pad || e.offsetY > rect.height-pad;
+  if(near) handleNoHover();
+});
+
+/* ===========================
+   Init on Load
+   =========================== */
+function init(){
+  // Stage A
+  loadBest();
+  initGame();
+
+  // Stage B hearts background
+  spawnBgHearts();
+
+  // Bring user back where they left “No” attempts
+  if(noAttempts>0){
+    toast(`Welcome back! Attempts on “No”: ${noAttempts}`);
+  }
+
+  // Ensure “Yes” + “No” layout stacks on mobile naturally via .cta-row (done in CSS)
+}
+document.addEventListener('DOMContentLoaded', init);
+
+/* Expose required function names (for reference/testing) */
+window.initGame = initGame;
+window.flipCard = flipCard;
+window.checkMatch = checkMatch;
+window.goToStage = goToStage;
+window.handleYes = handleYes;
+window.handleNoHover = handleNoHover;
+window.handleNoClick = handleNoClick;
+window.showModal = showModal;
+window.toast = toast;
+window.confetti = confetti;
+</script>
+</body>
+</html>
